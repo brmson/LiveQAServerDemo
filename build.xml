@@ -21,10 +21,10 @@
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
     <mkdir dir="${lib}"/>
-    <get src="http://central.maven.org/maven2/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar"
-      dest="${lib}" verbose="true" usetimestamp="true"/>
-    <get src="http://central.maven.org/maven2/org/jsoup/jsoup/1.8.2/jsoup-1.8.2.jar"
-      dest="${lib}" verbose="true" usetimestamp="true"/>
+    <get dest="${lib}" usetimestamp="true">
+      <url url="http://central.maven.org/maven2/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar"/>
+      <url url="http://central.maven.org/maven2/org/jsoup/jsoup/1.8.2/jsoup-1.8.2.jar"/>
+    </get>
   </target>
 
   <target name="compile" depends="init"
