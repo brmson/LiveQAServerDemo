@@ -76,27 +76,17 @@ public class TrecLiveQaDemoServer extends NanoHTTPD {
     public Response serve(IHTTPSession session) {
         // extract get time from system
         final long getTime = System.currentTimeMillis();
+        logger.info("Got request at " + getTime);
 
 	Map<String, String> headers = session.getHeaders();
 	String httpClientIP = headers.get("http-client-ip");
 
 	int accessCount = 
 	    numOffends.containsKey(httpClientIP)? numOffends.get(httpClientIP): 0;
-	if (accessCount >= 10) 
-	    return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Bye.");
-
-	// read qid first
-        Map<String, String> params = session.getParms();
-        String qid = params.get(QUESTION_ID_PARAMETER_NAME);
-	if (qid == null) {
-	    numOffends.put(httpClientIP, accessCount + 1);
-	    return new Response(Response.Status.INTERNAL_ERROR, 
-		    MIME_PLAINTEXT, Integer.toString(accessCount + 1) + 
-		    " malformed attempts have been recorded.");
+	if (accessCount >= 10) {
+	    logger.info("Dropped " + httpClientIP);
+	    return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Bye");
 	}
-
-        logger.info("Got request at " + getTime);
-        logger.info("QID: " + qid);
 
         // read question data
         Map<String, String> files = new HashMap<>();
@@ -111,9 +101,15 @@ public class TrecLiveQaDemoServer extends NanoHTTPD {
                 return new Response(re.getStatus(), MIME_PLAINTEXT, re.getMessage());
             }
         }
+        Map<String, String> params = session.getParms();
+        String qid = params.get(QUESTION_ID_PARAMETER_NAME);
         String title = params.get(QUESTION_TITLE_PARAMETER_NAME);
         String body = params.get(QUESTION_BODY_PARAMETER_NAME);
         String category = params.get(QUESTION_CATEGORY_PARAMETER_NAME);
+        logger.info("QID: " + qid + ", IP: " + httpClientIP);
+
+	if (qid == null)
+	    numOffends.put(httpClientIP, accessCount + 1);
 
         // "get answer"
         AnswerAndResources answerAndResources = null;
