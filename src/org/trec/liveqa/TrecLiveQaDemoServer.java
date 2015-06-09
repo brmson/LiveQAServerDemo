@@ -93,6 +93,9 @@ public class TrecLiveQaDemoServer extends NanoHTTPD {
         String title = params.get(QUESTION_TITLE_PARAMETER_NAME);
         String body = params.get(QUESTION_BODY_PARAMETER_NAME);
         String category = params.get(QUESTION_CATEGORY_PARAMETER_NAME);
+
+	if (qid == null) 
+	    return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "");
         logger.info("QID: " + qid);
 
         // "get answer"
