@@ -60,20 +60,43 @@ public class TrecLiveQaDemoServer extends NanoHTTPD {
     public static final Charset WORKING_CHARSET = StandardCharsets.UTF_8;
 
     private static final Logger logger = Logger.getLogger(TrecLiveQaDemoServer.class.getName());
+    protected Map<String, Integer> numOffends;
 
     public TrecLiveQaDemoServer(String hostname, int port) {
         super(hostname, port);
+	numOffends = new HashMap<String, Integer>();
     }
 
     public TrecLiveQaDemoServer(int port) {
         super(port);
+	numOffends = new HashMap<String, Integer>();
     }
 
     @Override
     public Response serve(IHTTPSession session) {
         // extract get time from system
         final long getTime = System.currentTimeMillis();
+
+	Map<String, String> headers = session.getHeaders();
+	String httpClientIP = headers.get("http-client-ip");
+
+	int accessCount = 
+	    numOffends.containsKey(httpClientIP)? numOffends.get(httpClientIP): 0;
+	if (accessCount >= 10) 
+	    return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Bye.");
+
+	// read qid first
+        Map<String, String> params = session.getParms();
+        String qid = params.get(QUESTION_ID_PARAMETER_NAME);
+	if (qid == null) {
+	    numOffends.put(httpClientIP, accessCount + 1);
+	    return new Response(Response.Status.INTERNAL_ERROR, 
+		    MIME_PLAINTEXT, Integer.toString(accessCount + 1) + 
+		    " malformed attempts have been recorded.");
+	}
+
         logger.info("Got request at " + getTime);
+        logger.info("QID: " + qid);
 
         // read question data
         Map<String, String> files = new HashMap<>();
@@ -88,15 +111,9 @@ public class TrecLiveQaDemoServer extends NanoHTTPD {
                 return new Response(re.getStatus(), MIME_PLAINTEXT, re.getMessage());
             }
         }
-        Map<String, String> params = session.getParms();
-        String qid = params.get(QUESTION_ID_PARAMETER_NAME);
         String title = params.get(QUESTION_TITLE_PARAMETER_NAME);
         String body = params.get(QUESTION_BODY_PARAMETER_NAME);
         String category = params.get(QUESTION_CATEGORY_PARAMETER_NAME);
-
-	if (qid == null) 
-	    return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "");
-        logger.info("QID: " + qid);
 
         // "get answer"
         AnswerAndResources answerAndResources = null;
