@@ -174,6 +174,10 @@ public class TrecLiveQaDemoServer extends NanoHTTPD {
      */
     protected AnswerAndResources getAnswerAndResources(String qid, String title, String body, String category)
                     throws InterruptedException {
+	System.out.println("qid="+ qid);
+	System.out.println("title="+ title);
+	System.out.println("body="+ body);
+	System.out.println("category="+ category);
         return new AnswerAndResources("my answer", "resource1,resource2");
     }
 
